@@ -17,3 +17,32 @@ Watch a video demonstration of P. F. Harrison's algorithm on YouTube: [https://w
 </p>
 
 Guilherme Rossato wrote [build instructions for Windows](https://github.com/mxgmn/SynTex/pull/3/files).
+
+<h2>Building</h2>
+
+1. Download this repository and extract it in a folder named "SynTex-master" (the instructions below depends on that name).
+2. Download and install `Microsoft .NET Framework`, once you have it installed, check if `dotnet` command can be called from a terminal (console) before continuing.
+
+3. From the command line, access the extracted project folder, create the project file and require System.Drawing like this:
+
+````batch
+cd SynTex-master
+dotnet new console
+dotnet add package System.Drawing.Common --version 4.5.0-preview1-25718-03
+del Program.cs
+````
+
+4. Open SynTex-Master.csproj file and disable the generation of assembly configuration inside the <PropertyGroup> directive:
+
+````batch
+  <PropertyGroup>
+	<GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
+  </PropertyGroup>
+````
+	
+Note: The `PropertyGroup` Directive is inside the <Project Sdk="..."> Directive
+
+5. Build and run the project with the `dotnet` command line tool:
+````batch
+dotnet run
+````
