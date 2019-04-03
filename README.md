@@ -16,6 +16,8 @@ Watch a video demonstration of P. F. Harrison's algorithm on YouTube: [https://w
 	<img src="http://i.imgur.com/UJnnryW.png">
 </p>
 
+Guilherme Rossato wrote [build instructions for Windows](https://github.com/mxgmn/SynTex/pull/3/files).
+
 <h2>Building</h2>
 
 1. Download this repository and extract it in a folder named "SynTex-master" (the instructions below depends on that name).
@@ -29,7 +31,6 @@ dotnet new console
 dotnet add package System.Drawing.Common --version 4.5.0-preview1-25718-03
 del Program.cs
 ````
-Note: Removing Program.cs is necessary to avoid multiple entry-points, which would return an error on build.
 
 4. Open SynTex-Master.csproj file and disable the generation of assembly configuration inside the <PropertyGroup> directive:
 
