@@ -10,6 +10,7 @@ The software is provided "as is", without warranty of any kind, express or impli
 */
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Drawing;
 using System.Xml.Linq;
@@ -21,62 +22,91 @@ static class Program
 {
 	static void Main()
 	{
-		Stopwatch sw = Stopwatch.StartNew();
-		XDocument xdoc = XDocument.Load("samples.xml");
+        string inputDir = "input";
+        string outputDir = "output";
+
+        if(!Directory.Exists(outputDir))
+        {
+            Directory.CreateDirectory(outputDir);
+        }
+
+        string[] samplesXmlPaths = {inputDir, "samples.xml"};
+        string samplesXmlFullPath = Path.Combine(samplesXmlPaths);
+
+        // Console.ReadLine();
+
+		XDocument xdoc = XDocument.Load(samplesXmlFullPath);
 		int pass = 1;
 
-		foreach (XElement xelem in xdoc.Root.Elements("sample"))
+        Stopwatch totalSw = Stopwatch.StartNew();
+
+        foreach (XElement xelem in xdoc.Root.Elements("sample"))
 		{
 			string name = xelem.Get<string>("name"), method = xelem.Get<string>("method");
 			int K = xelem.Get("K", 1), N = xelem.Get("N", 1), M = xelem.Get("M", 20), polish = xelem.Get("polish", 3), OW = xelem.Get("width", 32), OH = xelem.Get("height", 32);
 			bool indexed = xelem.Get("indexed", true);
 			double t = xelem.Get("temperature", 1.0);
 
-			Bitmap sample = new Bitmap($"Samples/{name}.png");
+            string[] imagePaths = {inputDir, name};
+            string imageFullPath = Path.Combine(imagePaths);
+
+			Bitmap sample = new Bitmap(imageFullPath);
 			List<int>[] similaritySets = null;
 
 			int[] sampleArray = new int[sample.Width * sample.Height];
 			for (int j = 0; j < sample.Width * sample.Height; j++) sampleArray[j] = sample.GetPixel(j % sample.Width, j / sample.Width).ToArgb();
 
-			if (method == "Coherent")
+            string fileBase = Path.GetFileNameWithoutExtension(name);
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            if (method == "Coherent")
 			{
 				Console.WriteLine($"< {name}");
 				similaritySets = Analysis(sampleArray, sample.Width, sample.Height, K, N, indexed);
 			}
 
-			for (int i = 0; i < xelem.Get("screenshots", 1); i++)
+            for (int i = 0; i < xelem.Get("screenshots", 1); i++)
 			{
 				Console.WriteLine($"> {name} {i}");
-				string filename = $"{pass} {method} {name} {indexed} N={N} ";
+				string outputBase = $"{pass} {method} {fileBase} {indexed} N={N} ";
 				int[] outputArray;
 
 				if (method == "Full")
 				{
 					outputArray = FullSynthesis(sampleArray, sample.Width, sample.Height, N, OW, OH, t, indexed);
-					filename += $"t={t}";
+                    outputBase += $"t={t}";
 				}
 				else if (method == "Coherent")
 				{
 					outputArray = CoherentSynthesis(sampleArray, sample.Width, sample.Height, similaritySets, N, OW, OH, t, indexed);
-					filename += $"K={K} t={t}";
+                    outputBase += $"K={K} t={t}";
 				}
 				else if (method == "Harrison")
 				{
 					outputArray = ReSynthesis(sampleArray, sample.Width, sample.Height, N, M, polish, indexed, OW, OH);
-					filename += $"M={M} polish={polish}";
+                    outputBase += $"M={M} polish={polish}";
 				}
 				else continue;
 
 				Bitmap output = new Bitmap(OW, OH);
 				for (int j = 0; j < OW * OH; j++) output.SetPixel(j % OW, j / OW, Color.FromArgb(outputArray[j]));
-				output.Save($"{filename} {i}.png");
+
+                string[] outputPaths = {outputDir, $"{outputBase} {i}.png"};
+                string outputFullPath = Path.Combine(outputPaths);
+				output.Save(outputFullPath);
 			}
 
-			pass++;
+            Console.WriteLine($"time = {sw.ElapsedMilliseconds}");
+
+            pass++;
 		}
 
-		Console.WriteLine($"time = {sw.ElapsedMilliseconds}");
-	}
+        Console.WriteLine($"Total time = {totalSw.ElapsedMilliseconds}");
+
+        Console.Write("\nPress any key to continue... ");
+        Console.ReadLine();
+    }
 
 	static List<int>[] Analysis(int[] bitmap, int width, int height, int K, int N, bool indexed)
 	{
