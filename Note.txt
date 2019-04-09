@@ -1,1 +1,2 @@
 Full method on test.png: take 6h (21669040 milliseconds)
+Coherent method can't be run on test.png
